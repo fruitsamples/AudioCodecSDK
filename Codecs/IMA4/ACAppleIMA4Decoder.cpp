@@ -1,43 +1,50 @@
-/*	Copyright © 2007 Apple Inc. All Rights Reserved.
-	
-	Disclaimer: IMPORTANT:  This Apple software is supplied to you by 
-			Apple Inc. ("Apple") in consideration of your agreement to the
-			following terms, and your use, installation, modification or
-			redistribution of this Apple software constitutes acceptance of these
-			terms.  If you do not agree with these terms, please do not use,
-			install, modify or redistribute this Apple software.
-			
-			In consideration of your agreement to abide by the following terms, and
-			subject to these terms, Apple grants you a personal, non-exclusive
-			license, under Apple's copyrights in this original Apple software (the
-			"Apple Software"), to use, reproduce, modify and redistribute the Apple
-			Software, with or without modifications, in source and/or binary forms;
-			provided that if you redistribute the Apple Software in its entirety and
-			without modifications, you must retain this notice and the following
-			text and disclaimers in all such redistributions of the Apple Software. 
-			Neither the name, trademarks, service marks or logos of Apple Inc. 
-			may be used to endorse or promote products derived from the Apple
-			Software without specific prior written permission from Apple.  Except
-			as expressly stated in this notice, no other rights or licenses, express
-			or implied, are granted by Apple herein, including but not limited to
-			any patent rights that may be infringed by your derivative works or by
-			other works in which the Apple Software may be incorporated.
-			
-			The Apple Software is provided by Apple on an "AS IS" basis.  APPLE
-			MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION
-			THE IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS
-			FOR A PARTICULAR PURPOSE, REGARDING THE APPLE SOFTWARE OR ITS USE AND
-			OPERATION ALONE OR IN COMBINATION WITH YOUR PRODUCTS.
-			
-			IN NO EVENT SHALL APPLE BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL
-			OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-			SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-			INTERRUPTION) ARISING IN ANY WAY OUT OF THE USE, REPRODUCTION,
-			MODIFICATION AND/OR DISTRIBUTION OF THE APPLE SOFTWARE, HOWEVER CAUSED
-			AND WHETHER UNDER THEORY OF CONTRACT, TORT (INCLUDING NEGLIGENCE),
-			STRICT LIABILITY OR OTHERWISE, EVEN IF APPLE HAS BEEN ADVISED OF THE
-			POSSIBILITY OF SUCH DAMAGE.
+/*
+    File: ACAppleIMA4Decoder.cpp
+Abstract: ACAppleIMA4Decoder.cpp file for AudioCodecSDK.
+ Version: 1.0.1
+
+Disclaimer: IMPORTANT:  This Apple software is supplied to you by Apple
+Inc. ("Apple") in consideration of your agreement to the following
+terms, and your use, installation, modification or redistribution of
+this Apple software constitutes acceptance of these terms.  If you do
+not agree with these terms, please do not use, install, modify or
+redistribute this Apple software.
+
+In consideration of your agreement to abide by the following terms, and
+subject to these terms, Apple grants you a personal, non-exclusive
+license, under Apple's copyrights in this original Apple software (the
+"Apple Software"), to use, reproduce, modify and redistribute the Apple
+Software, with or without modifications, in source and/or binary forms;
+provided that if you redistribute the Apple Software in its entirety and
+without modifications, you must retain this notice and the following
+text and disclaimers in all such redistributions of the Apple Software.
+Neither the name, trademarks, service marks or logos of Apple Inc. may
+be used to endorse or promote products derived from the Apple Software
+without specific prior written permission from Apple.  Except as
+expressly stated in this notice, no other rights or licenses, express or
+implied, are granted by Apple herein, including but not limited to any
+patent rights that may be infringed by your derivative works or by other
+works in which the Apple Software may be incorporated.
+
+The Apple Software is provided by Apple on an "AS IS" basis.  APPLE
+MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION
+THE IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE, REGARDING THE APPLE SOFTWARE OR ITS USE AND
+OPERATION ALONE OR IN COMBINATION WITH YOUR PRODUCTS.
+
+IN NO EVENT SHALL APPLE BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL
+OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) ARISING IN ANY WAY OUT OF THE USE, REPRODUCTION,
+MODIFICATION AND/OR DISTRIBUTION OF THE APPLE SOFTWARE, HOWEVER CAUSED
+AND WHETHER UNDER THEORY OF CONTRACT, TORT (INCLUDING NEGLIGENCE),
+STRICT LIABILITY OR OTHERWISE, EVEN IF APPLE HAS BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+Copyright (C) 2012 Apple Inc. All Rights Reserved.
+
 */
+
 //=============================================================================
 //	Includes
 //=============================================================================
@@ -48,20 +55,6 @@
 #include "CADebugMacros.h"
 #include "CABundleLocker.h"
 
-#if AUDIO_CODECS_PRIVATE
-	#include "ACQTAtoms.h"
-#endif
-	
-#if AUDIO_CODECS_PRIVATE
-	#if !TARGET_OS_IPHONE
-		#include "ACAppWorkArounds.h"
-	#endif
-#endif
-
-#if TARGET_OS_WIN32
-	#include "CAWin32StringResources.h"
-#endif
-
 //=============================================================================
 //	ACAppleIMA4Decoder
 //=============================================================================
@@ -70,73 +63,14 @@ ACAppleIMA4Decoder::ACAppleIMA4Decoder(OSType theSubType)
 :
 	ACAppleIMA4Codec(kInputBufferPackets * kIMA4PacketBytes, theSubType)
 {
-#if AUDIO_CODECS_PRIVATE
-	if (theSubType == kAudioFormatAppleIMA4)
-	{
-		CAStreamBasicDescription theInputFormat(kAudioStreamAnyRate, kAudioFormatAppleIMA4, 0, kIMAFramesPerPacket, 0, 0, 0, 0);
-		AddInputFormat(theInputFormat);
-	}
-	else if (theSubType == kAudioFormatDVI)
-	{
-		CAStreamBasicDescription theInputFormat2(kAudioStreamAnyRate, kAudioFormatDVI, 0, kDVIFramesPerPacket, 0, 0, 0, 0);
-		AddInputFormat(theInputFormat2);
-	}
-	else if (theSubType == kDVIIntelIMAFormat)
-	{
-		// seems MS streams can have arbitrary numbers in frames per packet, but we can't list '0' here because it breaks far too much
-		// for mono  : frames per packet == (bytes per packet - 4 * num channels) * 2 + 1
-		// for stereo: frames per packet == (bytes per packet - 4 * num channels) + 1
-		CAStreamBasicDescription theInputFormat3(kAudioStreamAnyRate, kDVIIntelIMAFormat, 256, 505, 0, 1, 0, 0); 
-		AddInputFormat(theInputFormat3);
-
-		CAStreamBasicDescription theInputFormat4(kAudioStreamAnyRate, kDVIIntelIMAFormat, 256, 249, 0, 2, 0, 0);
-		AddInputFormat(theInputFormat4);
-
-		CAStreamBasicDescription theInputFormat5(kAudioStreamAnyRate, kDVIIntelIMAFormat, 512, 1017, 0, 1, 0, 0); 
-		AddInputFormat(theInputFormat5);
-
-		CAStreamBasicDescription theInputFormat6(kAudioStreamAnyRate, kDVIIntelIMAFormat, 512, 505, 0, 2, 0, 0); 
-		AddInputFormat(theInputFormat6);
-
-		CAStreamBasicDescription theInputFormat7(kAudioStreamAnyRate, kDVIIntelIMAFormat, 1024, 2041, 0, 1, 0, 0); 
-		AddInputFormat(theInputFormat7);
-
-		CAStreamBasicDescription theInputFormat8(kAudioStreamAnyRate, kDVIIntelIMAFormat, 1024, 1017, 0, 2, 0, 0); 
-		AddInputFormat(theInputFormat8);
-
-		CAStreamBasicDescription theInputFormat9(kAudioStreamAnyRate, kDVIIntelIMAFormat, 2048, 4089, 0, 1, 0, 0); 
-		AddInputFormat(theInputFormat9);
-
-		CAStreamBasicDescription theInputFormatA(kAudioStreamAnyRate, kDVIIntelIMAFormat, 2048, 2041, 0, 2, 0, 0); 
-		AddInputFormat(theInputFormatA);
-	}
-
-	//	set our initial input format to mono Apple IMA4 at a 44100 sample rate
-	mInputFormat.mFormatID = theSubType;
-	switch (theSubType)
-	{
-		case kAudioFormatAppleIMA4:	
-			mInputFormat.mBytesPerPacket = kIMA4PacketBytes;
-			mInputFormat.mFramesPerPacket = kIMAFramesPerPacket;
-			break;
-		case kAudioFormatDVI:	
-			mInputFormat.mBytesPerPacket = kIMA4PacketBytes;
-			mInputFormat.mFramesPerPacket = kDVIFramesPerPacket;
-			break;
-		case kDVIIntelIMAFormat:	
-			mInputFormat.mBytesPerPacket = 2048;
-			mInputFormat.mFramesPerPacket = 4089;
-			break;
-	}
-#else
-	//	This decoder only takes an Apple IMA4 stream as it's input
-	CAStreamBasicDescription theInputFormat(kAudioStreamAnyRate, kAudioFormatAppleIMA4, 0, kIMAFramesPerPacket, 0, 0, 0, 0);
+	//	This decoder only takes an Acme IMA4 stream as it's input
+	CAStreamBasicDescription theInputFormat(kAudioStreamAnyRate, 'DEMO', 0, kIMAFramesPerPacket, 0, 0, 0, 0);
 	AddInputFormat(theInputFormat);
 	//	set our initial input format to mono Apple IMA4 at a 44100 sample rate
-	mInputFormat.mFormatID = kAudioFormatAppleIMA4;
+	mInputFormat.mFormatID = 'DEMO';
 	mInputFormat.mBytesPerPacket = kIMA4PacketBytes;
 	mInputFormat.mFramesPerPacket = kIMAFramesPerPacket;
-#endif
+
 	mInputFormat.mSampleRate = 44100;
 	mInputFormat.mFormatFlags = 0;
 	mInputFormat.mBytesPerFrame = 0;
@@ -160,12 +94,6 @@ ACAppleIMA4Decoder::ACAppleIMA4Decoder(OSType theSubType)
 	
 	//	initialize our channel state
 	InitializeChannelStateList();
-	
-#if AUDIO_CODECS_PRIVATE
-	mAdpcmState.valprev = 0;
-	mAdpcmState.index = 0;
-	mAdpcmState.pad = 0;
-#endif
 }
 
 ACAppleIMA4Decoder::~ACAppleIMA4Decoder()
@@ -176,37 +104,13 @@ void	ACAppleIMA4Decoder::GetProperty(AudioCodecPropertyID inPropertyID, UInt32& 
 {	
 	switch(inPropertyID)
 	{
-#if AUDIO_CODECS_PRIVATE
 #if !BUILD_ADEC_LIB
 		case kAudioCodecPropertyNameCFString:
 		{
 			if (ioPropertyDataSize != SizeOf32(CFStringRef)) CODEC_THROW(kAudioCodecBadPropertySizeError);
 			
 			CABundleLocker lock;
-			CFStringRef name;
-			if (mCodecSubType == kAudioFormatDVI)
-			{
-				name = CFCopyLocalizedStringFromTableInBundle(CFSTR("DVI decoder"), CFSTR("CodecNames"), GetCodecBundle(), CFSTR(""));
-			}
-			else if (mCodecSubType == kDVIIntelIMAFormat)
-			{
-				name = CFCopyLocalizedStringFromTableInBundle(CFSTR("MS DVI decoder"), CFSTR("CodecNames"), GetCodecBundle(), CFSTR(""));
-			}
-			else
-			{
-				name = CFCopyLocalizedStringFromTableInBundle(CFSTR("Apple IMA4 decoder"), CFSTR("CodecNames"), GetCodecBundle(), CFSTR(""));
-			}
-			*(CFStringRef*)outPropertyData = name;
-			break; 
-		}
-#endif
-#else
-		case kAudioCodecPropertyNameCFString:
-		{
-			if (ioPropertyDataSize != SizeOf32(CFStringRef)) CODEC_THROW(kAudioCodecBadPropertySizeError);
-			
-			CABundleLocker lock;
-			CFStringRef name = CFCopyLocalizedStringFromTableInBundle(CFSTR("Apple IMA4 decoder"), CFSTR("CodecNames"), GetCodecBundle(), CFSTR(""));
+			CFStringRef name = CFCopyLocalizedStringFromTableInBundle(CFSTR("Acme IMA4 decoder"), CFSTR("CodecNames"), GetCodecBundle(), CFSTR(""));
 			*(CFStringRef*)outPropertyData = name;
 			break; 
 		}
@@ -214,18 +118,7 @@ void	ACAppleIMA4Decoder::GetProperty(AudioCodecPropertyID inPropertyID, UInt32& 
        case kAudioCodecPropertyMaximumPacketByteSize:
   			if(ioPropertyDataSize == SizeOf32(UInt32))
 			{
-#if AUDIO_CODECS_PRIVATE
-				if (mCodecSubType == kAudioFormatAppleIMA4)
-				{
-					*reinterpret_cast<UInt32*>(outPropertyData) = kIMA4PacketBytes * mInputFormat.mChannelsPerFrame;
-				}
-				else
-				{
-					*reinterpret_cast<UInt32*>(outPropertyData) = mInputFormat.mBytesPerPacket;
-				}
-#else
 				*reinterpret_cast<UInt32*>(outPropertyData) = kIMA4PacketBytes * mInputFormat.mChannelsPerFrame;
-#endif
             }
 			else
 			{
@@ -235,24 +128,7 @@ void	ACAppleIMA4Decoder::GetProperty(AudioCodecPropertyID inPropertyID, UInt32& 
 		case kAudioCodecPropertyPacketFrameSize:
 			if(ioPropertyDataSize == SizeOf32(UInt32))
 			{
-#if AUDIO_CODECS_PRIVATE
-                switch (mCodecSubType)
-				{
-					case kAudioFormatAppleIMA4:
-						*reinterpret_cast<UInt32*>(outPropertyData) = kIMAFramesPerPacket;
-						break;
-					case kAudioFormatDVI:
-					case kDVIIntelIMAFormat:
-						*reinterpret_cast<UInt32*>(outPropertyData) = mInputFormat.mFramesPerPacket;
-						break;
-
-					default:
-						CODEC_THROW(kAudioCodecUnsupportedFormatError);
-						break;
-				}
-#else
-				*reinterpret_cast<UInt32*>(outPropertyData) = kIMAFramesPerPacket;
-#endif
+                *reinterpret_cast<UInt32*>(outPropertyData) = kIMAFramesPerPacket;
             }
 			else
 			{
@@ -266,14 +142,6 @@ void	ACAppleIMA4Decoder::GetProperty(AudioCodecPropertyID inPropertyID, UInt32& 
 
 void	ACAppleIMA4Decoder::SetCurrentInputFormat(const AudioStreamBasicDescription& inInputFormat)
 {
-#if AUDIO_CODECS_PRIVATE
-#if !TARGET_OS_IPHONE
-	bool workAroundFlag = ACAppWorkArounds::Needs5939262WorkAround();
-#else
-	bool workAroundFlag = false;
-#endif
-#endif
-
 	if(!mIsInitialized)
 	{
 		AudioStreamBasicDescription tempInputFormat = inInputFormat;
@@ -281,42 +149,11 @@ void	ACAppleIMA4Decoder::SetCurrentInputFormat(const AudioStreamBasicDescription
 		if(tempInputFormat.mFormatID != mCodecSubType)
 		{
 #if VERBOSE
-			DebugMessage("ACAppleIMA4Decoder::SetCurrentInputFormat: only support Apple IMA for output");
+			DebugMessage("ACAppleIMA4Decoder::SetCurrentInputFormat: only support Acme IMA for output");
 #endif
 			CODEC_THROW(kAudioCodecUnsupportedFormatError);
 		}
 		
-#if AUDIO_CODECS_PRIVATE
-		if (tempInputFormat.mFormatID == kAudioFormatAppleIMA4 && tempInputFormat.mFramesPerPacket != kIMAFramesPerPacket)
-		{
-#if VERBOSE
-			DebugMessage("ACAppleIMA4Decoder::SetCurrentInputFormat: only supports 64 frames per packet");
-#endif
-			CODEC_THROW(kAudioCodecUnsupportedFormatError);
-		}
-		else if (tempInputFormat.mFormatID == kAudioFormatDVI && tempInputFormat.mFramesPerPacket != kDVIFramesPerPacket)
-		{
-#if VERBOSE
-			DebugMessage("ACAppleIMA4Decoder::SetCurrentInputFormat: only supports 2041 frames per packet for DVI");
-#endif
-			CODEC_THROW(kAudioCodecUnsupportedFormatError);
-		}
-		else if (tempInputFormat.mFormatID == kDVIIntelIMAFormat && !(tempInputFormat.mFramesPerPacket <= 4096) )
-		{
-#if VERBOSE
-			DebugMessage("ACAppleIMA4Decoder::SetCurrentInputFormat: only supports up to 4096 frames per packet for Intel IMA");
-#endif
-			CODEC_THROW(kAudioCodecUnsupportedFormatError);
-		}
-		else if (tempInputFormat.mFormatID == kDVIIntelIMAFormat && tempInputFormat.mFramesPerPacket == 0 && tempInputFormat.mBytesPerPacket == 0 && workAroundFlag)
-		{
-#if VERBOSE
-			DebugMessage("ACAppleIMA4Decoder::SetCurrentInputFormat: must fill out either bytes or frames per packet");
-#endif
-			tempInputFormat.mFramesPerPacket = mInputFormat.mFramesPerPacket;
-			tempInputFormat.mBytesPerPacket = mInputFormat.mBytesPerPacket;
-		}
-#else
 		if (tempInputFormat.mFramesPerPacket != kIMAFramesPerPacket)
 		{
 #if VERBOSE
@@ -325,7 +162,6 @@ void	ACAppleIMA4Decoder::SetCurrentInputFormat(const AudioStreamBasicDescription
 			CODEC_THROW(kAudioCodecUnsupportedFormatError);
 		}
 
-#endif
 		// Do same basic sanity checks
 		if(tempInputFormat.mSampleRate < 0.0)
 		{
@@ -374,29 +210,9 @@ void	ACAppleIMA4Decoder::SetCurrentInputFormat(const AudioStreamBasicDescription
 		mInputFormat.mBitsPerChannel = 0;
 		mInputFormat.mFormatFlags = 0;
 		mInputFormat.mReserved = 0;
-#if AUDIO_CODECS_PRIVATE		
-		if (mCodecSubType == kAudioFormatAppleIMA4) // recalculate
-		{
-			// This needs to be calculated out
-			mInputFormat.mBytesPerPacket = kIMA4PacketBytes * mInputFormat.mChannelsPerFrame;
-		}
-		else if (mCodecSubType == kDVIIntelIMAFormat) // recalculate
-		{
-			mInputFormat.mFramesPerPacket = mInputFormat.mBytesPerPacket - (mInputFormat.mChannelsPerFrame * 4);
-			if (mInputFormat.mChannelsPerFrame == 1)
-			{
-				mInputFormat.mFramesPerPacket *= 2;
-			}
-			mInputFormat.mFramesPerPacket += 1;
-		}
-		if (mInputFormat.mBytesPerPacket > GetInputBufferByteSize()) // some Intel IMA packets are really big
-		{
-			ReallocateInputBuffer(mInputFormat.mBytesPerPacket);
-		}
-#else
+
 		// This needs to be calculated out
 		mInputFormat.mBytesPerPacket = kIMA4PacketBytes * mInputFormat.mChannelsPerFrame;
-#endif
 	}
 	else
 	{
@@ -509,32 +325,7 @@ UInt32	ACAppleIMA4Decoder::ProduceOutputPackets(void* outOutputData, UInt32& ioO
 		//	decode the input data for each channel
 		Byte* theInputData = GetBytes(inputByteSize);
 		SInt16* theOutputData = reinterpret_cast<SInt16*>(outOutputData);
-#if AUDIO_CODECS_PRIVATE
-		if (mCodecSubType == kAudioFormatAppleIMA4)
-		{
-			ChannelStateList::iterator theIterator = mChannelStateList.begin();
-			for(UInt32 theChannelIndex = 0; theChannelIndex < mOutputFormat.mChannelsPerFrame; ++theChannelIndex)
-			{
-				//printf("->DecodeChannel %d %d %d %08X %08X\n", mOutputFormat.mChannelsPerFrame, theChannelIndex, ioNumberPackets, theInputData, theOutputData);
-				DecodeChannelSInt16(*theIterator, mOutputFormat.mChannelsPerFrame, theChannelIndex, ioNumberPackets, theInputData, theOutputData);
-				std::advance(theIterator, 1);
-			}			
-		}
-		else
-		{
-			mAdpcmState.valprev = (theInputData[1] << 8) | (theInputData[0] << 0);
-			mAdpcmState.index = theInputData[2] & 0x0ff;
-			adpcm_decoder( theInputData + (4 * mOutputFormat.mChannelsPerFrame), theOutputData, mInputFormat.mFramesPerPacket, &mAdpcmState,
-						   sIndexTable, sStepTable, true, mOutputFormat.mChannelsPerFrame == 2);
-			if (mOutputFormat.mChannelsPerFrame == 2)
-			{
-				mAdpcmState.valprev = (theInputData[4+1] << 8) | (theInputData[4+0] << 0);
-				mAdpcmState.index = theInputData[4+2] & 0x0ff;
-				adpcm_decoder( theInputData + (4 * mOutputFormat.mChannelsPerFrame) + 4, theOutputData + 1, mInputFormat.mFramesPerPacket, &mAdpcmState,
-								 sIndexTable, sStepTable, true, true);
-			}
-		}
-#else
+
 		ChannelStateList::iterator theIterator = mChannelStateList.begin();
 		for(UInt32 theChannelIndex = 0; theChannelIndex < mOutputFormat.mChannelsPerFrame; ++theChannelIndex)
 		{
@@ -542,7 +333,7 @@ UInt32	ACAppleIMA4Decoder::ProduceOutputPackets(void* outOutputData, UInt32& ioO
 			DecodeChannelSInt16(*theIterator, mOutputFormat.mChannelsPerFrame, theChannelIndex, ioNumberPackets, theInputData, theOutputData);
 			std::advance(theIterator, 1);
 		}
-#endif
+        
 		ConsumeInputData(inputByteSize);
 	}
 	else
@@ -654,107 +445,6 @@ UInt32	ACAppleIMA4Decoder::GetVersion() const
 	return kIMA4adecVersion;
 }
 
-#if AUDIO_CODECS_PRIVATE
-void	ACAppleIMA4Decoder::Uninitialize()
-{
-	mAdpcmState.valprev = 0;
-	mAdpcmState.index = 0;
-	mAdpcmState.pad = 0;
-	
-	//	let our base class clean up it's internal state
-	ACAppleIMA4Codec::Uninitialize();
-}
-
-void	ACAppleIMA4Decoder::Reset()
-{
-	mAdpcmState.valprev = 0;
-	mAdpcmState.index = 0;
-	mAdpcmState.pad = 0;
-	
-	//	let our base class clean up it's internal state
-	ACAppleIMA4Codec::Reset();
-}
-
-void	ACAppleIMA4Decoder::SetMagicCookie(const void* magicCookiePtr, UInt32 magicCookieSize)
-{
-	class QTAtom { 
-		UInt32 mAtomSize; OSType mAtomType; OSType mFormat;
-	public:
-		QTAtom(const void** cookiePtr, UInt32& cookieSize) : mFormat(0) { 
-			mAtomSize = CFSwapInt32BigToHost(*((UInt32*)(*cookiePtr))); *((char**)cookiePtr) += SizeOf32(mAtomSize); cookieSize -= SizeOf32(mAtomSize);
-			mAtomType = CFSwapInt32BigToHost(*((UInt32*)(*cookiePtr))); *((char**)cookiePtr) += SizeOf32(mAtomType); cookieSize -= SizeOf32(mAtomType);
-			if(mAtomType == kAudioFormatAtomType) {
-				mFormat = CFSwapInt32BigToHost(*((UInt32*)(*cookiePtr))); *((char**)cookiePtr) += SizeOf32(mFormat); cookieSize -= SizeOf32(mFormat);
-			}
-		}
-		UInt32 size() const { return mAtomSize - 8; }
-		OSType type() const { return mAtomType; }
-		OSType format() const { return mFormat; }
-	};
-
-	while(magicCookieSize >= 8) // Minimum atom size (terminator atom)
-	{
-		QTAtom atom(&magicCookiePtr, magicCookieSize);
-		if(atom.type() == kAudioFormatAtomType)
-		{
-			if(atom.format() != kDVIIntelIMAFormat)
-			{
-				// This isn't an Intel DVI IMA compression code
-				CODEC_THROW(kAudioCodecUnsupportedFormatError);
-			}
-			
-			QTAtom wavefmtAtom(&magicCookiePtr, magicCookieSize);
-			if(wavefmtAtom.type() != kDVIIntelIMAFormat || wavefmtAtom.size() != 20)
-			{
-				CODEC_THROW(kAudioCodecUnsupportedFormatError);
-			}
-			else
-			{
-				UInt32 i;
-				AudioStreamBasicDescription asbd;
-				for(i = 0; i < mInputFormatList.size(); ++i) {
-					if(mInputFormatList[i].mFormatID == kDVIIntelIMAFormat) {
-						asbd = mInputFormatList[i];
-						break;
-					}
-				}
-
-				// This is the MS WAVEFORMATEX struct in little endian byte order
-				UInt16 compressionCode = (UInt32)CFSwapInt16LittleToHost(*((UInt16*)magicCookiePtr)); *((char**)&magicCookiePtr) += SizeOf32(UInt16);
-				if(compressionCode != 0x0011)
-					CODEC_THROW(kAudioCodecUnsupportedFormatError);
-				
-				asbd.mChannelsPerFrame = (UInt32)CFSwapInt16LittleToHost(*((UInt16*)magicCookiePtr)); *((char**)&magicCookiePtr) += SizeOf32(UInt16);
-				asbd.mSampleRate = (Float64)CFSwapInt32LittleToHost(*((UInt32*)magicCookiePtr)); *((char**)&magicCookiePtr) += SizeOf32(UInt32);
-				UInt32 tmp = CFSwapInt32LittleToHost(*((UInt32*)magicCookiePtr)); *((char**)&magicCookiePtr) += SizeOf32(UInt32);
-				asbd.mBytesPerPacket = CFSwapInt16LittleToHost(*((UInt16*)magicCookiePtr)); *((char**)&magicCookiePtr) += SizeOf32(UInt16);
-				tmp = CFSwapInt16LittleToHost(*((UInt16*)magicCookiePtr)); *((char**)&magicCookiePtr) += SizeOf32(UInt16); // bits per sample: 4
-				tmp = CFSwapInt16LittleToHost(*((UInt16*)magicCookiePtr)); *((char**)&magicCookiePtr) += SizeOf32(UInt16); // extra bytes: 2
-				asbd.mFramesPerPacket = CFSwapInt16LittleToHost(*((UInt16*)magicCookiePtr)); *((char**)&magicCookiePtr) += SizeOf32(UInt16);
-				magicCookieSize -= 20;
-				
-				// Sanity check the ASBD
-				for(i = 0; i < mInputFormatList.size(); ++i) {
-					if(mInputFormatList[i].IsEqual(asbd)) {
-						mInputFormat = asbd;
-						break;
-					}
-				}
-				if(i == mInputFormatList.size())
-				{
-					CODEC_THROW(kAudioCodecUnsupportedFormatError);
-				}
-			}
-		}
-		else if(atom.type() == kAudioTerminatorAtomType)
-		{	// terminator, we're done
-			break;
-		}
-	}
-}
-
-#endif
-
 #if !CA_NO_CORE_SERVICES
 extern "C"
 OSStatus		ACAppleIMA4DecoderEntry(ComponentParameters* inParameters, ACAppleIMA4Decoder* inThis)
@@ -795,5 +485,3 @@ void ACAppleIMA4Decoder::FixFormats()
 	mInputFormat.mBytesPerPacket = mInputFormat.mChannelsPerFrame * 34;
 	mInputFormat.mBytesPerFrame = 0;
 }
-
-

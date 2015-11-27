@@ -1,43 +1,50 @@
-/*	Copyright © 2007 Apple Inc. All Rights Reserved.
-	
-	Disclaimer: IMPORTANT:  This Apple software is supplied to you by 
-			Apple Inc. ("Apple") in consideration of your agreement to the
-			following terms, and your use, installation, modification or
-			redistribution of this Apple software constitutes acceptance of these
-			terms.  If you do not agree with these terms, please do not use,
-			install, modify or redistribute this Apple software.
-			
-			In consideration of your agreement to abide by the following terms, and
-			subject to these terms, Apple grants you a personal, non-exclusive
-			license, under Apple's copyrights in this original Apple software (the
-			"Apple Software"), to use, reproduce, modify and redistribute the Apple
-			Software, with or without modifications, in source and/or binary forms;
-			provided that if you redistribute the Apple Software in its entirety and
-			without modifications, you must retain this notice and the following
-			text and disclaimers in all such redistributions of the Apple Software. 
-			Neither the name, trademarks, service marks or logos of Apple Inc. 
-			may be used to endorse or promote products derived from the Apple
-			Software without specific prior written permission from Apple.  Except
-			as expressly stated in this notice, no other rights or licenses, express
-			or implied, are granted by Apple herein, including but not limited to
-			any patent rights that may be infringed by your derivative works or by
-			other works in which the Apple Software may be incorporated.
-			
-			The Apple Software is provided by Apple on an "AS IS" basis.  APPLE
-			MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION
-			THE IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS
-			FOR A PARTICULAR PURPOSE, REGARDING THE APPLE SOFTWARE OR ITS USE AND
-			OPERATION ALONE OR IN COMBINATION WITH YOUR PRODUCTS.
-			
-			IN NO EVENT SHALL APPLE BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL
-			OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-			SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-			INTERRUPTION) ARISING IN ANY WAY OUT OF THE USE, REPRODUCTION,
-			MODIFICATION AND/OR DISTRIBUTION OF THE APPLE SOFTWARE, HOWEVER CAUSED
-			AND WHETHER UNDER THEORY OF CONTRACT, TORT (INCLUDING NEGLIGENCE),
-			STRICT LIABILITY OR OTHERWISE, EVEN IF APPLE HAS BEEN ADVISED OF THE
-			POSSIBILITY OF SUCH DAMAGE.
+/*
+    File: ACAppleIMA4Codec.cpp
+Abstract: ACAppleIMA4Codec.cpp file for AudioCodecSDK.
+ Version: 1.0.1
+
+Disclaimer: IMPORTANT:  This Apple software is supplied to you by Apple
+Inc. ("Apple") in consideration of your agreement to the following
+terms, and your use, installation, modification or redistribution of
+this Apple software constitutes acceptance of these terms.  If you do
+not agree with these terms, please do not use, install, modify or
+redistribute this Apple software.
+
+In consideration of your agreement to abide by the following terms, and
+subject to these terms, Apple grants you a personal, non-exclusive
+license, under Apple's copyrights in this original Apple software (the
+"Apple Software"), to use, reproduce, modify and redistribute the Apple
+Software, with or without modifications, in source and/or binary forms;
+provided that if you redistribute the Apple Software in its entirety and
+without modifications, you must retain this notice and the following
+text and disclaimers in all such redistributions of the Apple Software.
+Neither the name, trademarks, service marks or logos of Apple Inc. may
+be used to endorse or promote products derived from the Apple Software
+without specific prior written permission from Apple.  Except as
+expressly stated in this notice, no other rights or licenses, express or
+implied, are granted by Apple herein, including but not limited to any
+patent rights that may be infringed by your derivative works or by other
+works in which the Apple Software may be incorporated.
+
+The Apple Software is provided by Apple on an "AS IS" basis.  APPLE
+MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION
+THE IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE, REGARDING THE APPLE SOFTWARE OR ITS USE AND
+OPERATION ALONE OR IN COMBINATION WITH YOUR PRODUCTS.
+
+IN NO EVENT SHALL APPLE BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL
+OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) ARISING IN ANY WAY OUT OF THE USE, REPRODUCTION,
+MODIFICATION AND/OR DISTRIBUTION OF THE APPLE SOFTWARE, HOWEVER CAUSED
+AND WHETHER UNDER THEORY OF CONTRACT, TORT (INCLUDING NEGLIGENCE),
+STRICT LIABILITY OR OTHERWISE, EVEN IF APPLE HAS BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+Copyright (C) 2012 Apple Inc. All Rights Reserved.
+
 */
+
 //=============================================================================
 //	Includes
 //=============================================================================
@@ -78,23 +85,7 @@ void	ACAppleIMA4Codec::Initialize(const AudioStreamBasicDescription* inInputForm
 		SetCurrentOutputFormat(*inOutputFormat);
 	}
 	
-#if AUDIO_CODECS_PRIVATE
-	if(inMagicCookie != NULL && inMagicCookieByteSize > 0 && mCodecSubType == kDVIIntelIMAFormat)
-	{
-		SetMagicCookie(inMagicCookie, inMagicCookieByteSize);
-		// Must override the output format here
-		mOutputFormat.mChannelsPerFrame = mInputFormat.mChannelsPerFrame;
-		mOutputFormat.mSampleRate = mInputFormat.mSampleRate;
-		mOutputFormat.mBytesPerPacket = mOutputFormat.mBytesPerFrame = mOutputFormat.mChannelsPerFrame * (mOutputFormat.mBitsPerChannel >> 3);
-	}
-
-	if (mCodecSubType == kAudioFormatAppleIMA4)
-	{
-		FixFormats();
-	}
-#else
 	FixFormats();
-#endif
 
 	//	make sure the sample rate and number of channels match between the input format and the output format
 	if( (mInputFormat.mSampleRate != mOutputFormat.mSampleRate) ||
@@ -217,23 +208,9 @@ void	ACAppleIMA4Codec::GetProperty(AudioCodecPropertyID inPropertyID, UInt32& io
 			}
 						
 			CABundleLocker lock;
-#if AUDIO_CODECS_PRIVATE
-			CFStringRef name;
-			if (mCodecSubType == kAudioFormatDVI)
-			{
-				name = CFCopyLocalizedStringFromTableInBundle(CFSTR("DVI"), CFSTR("CodecNames"), GetCodecBundle(), CFSTR(""));
-			}
-			else if (mCodecSubType == kDVIIntelIMAFormat)
-			{
-				name = CFCopyLocalizedStringFromTableInBundle(CFSTR("MS DVI"), CFSTR("CodecNames"), GetCodecBundle(), CFSTR(""));
-			}
-			else
-			{
-				name = CFCopyLocalizedStringFromTableInBundle(CFSTR("Apple IMA4"), CFSTR("CodecNames"), GetCodecBundle(), CFSTR(""));
-			}
-#else
-			CFStringRef name = CFCopyLocalizedStringFromTableInBundle(CFSTR("Apple IMA4"), CFSTR("CodecNames"), GetCodecBundle(), CFSTR(""));
-#endif
+
+			CFStringRef name = CFCopyLocalizedStringFromTableInBundle(CFSTR("Acme IMA4"), CFSTR("CodecNames"), GetCodecBundle(), CFSTR(""));
+            
 			*(CFStringRef*)outPropertyData = name;
 			break; 
 		}
@@ -241,18 +218,7 @@ void	ACAppleIMA4Codec::GetProperty(AudioCodecPropertyID inPropertyID, UInt32& io
         case kAudioCodecPropertyMaximumPacketByteSize:
   			if(ioPropertyDataSize == SizeOf32(UInt32))
 			{
-#if AUDIO_CODECS_PRIVATE
-				if (mCodecSubType == kAudioFormatAppleIMA4)
-				{
-					*reinterpret_cast<UInt32*>(outPropertyData) = kIMA4PacketBytes * mInputFormat.mChannelsPerFrame;
-				}
-				else
-				{
-					*reinterpret_cast<UInt32*>(outPropertyData) = 1024 * mInputFormat.mChannelsPerFrame;
-				}
-#else
 				*reinterpret_cast<UInt32*>(outPropertyData) = kIMA4PacketBytes * mInputFormat.mChannelsPerFrame;
-#endif
             }
 			else
 			{
@@ -282,25 +248,7 @@ void	ACAppleIMA4Codec::GetProperty(AudioCodecPropertyID inPropertyID, UInt32& io
 		case kAudioCodecPropertyPacketFrameSize:
 			if(ioPropertyDataSize == SizeOf32(UInt32))
 			{
-#if AUDIO_CODECS_PRIVATE
-                switch (mCodecSubType)
-				{
-					case kAudioFormatAppleIMA4:
-						*reinterpret_cast<UInt32*>(outPropertyData) = kIMAFramesPerPacket;
-						break;
-
-					case kAudioFormatDVI:
-					case kDVIIntelIMAFormat:
-						*reinterpret_cast<UInt32*>(outPropertyData) = kDVIFramesPerPacket;
-						break;
-
-					default:
-						CODEC_THROW(kAudioCodecUnsupportedFormatError);
-						break;
-				}
-#else
                 *reinterpret_cast<UInt32*>(outPropertyData) = kIMAFramesPerPacket;
-#endif
             }
 			else
 			{
@@ -384,39 +332,7 @@ void	ACAppleIMA4Codec::GetProperty(AudioCodecPropertyID inPropertyID, UInt32& io
 			if(ioPropertyDataSize == SizeOf32(AudioFormatInfo))
 			{
 				AudioFormatInfo& formatInfo = *(AudioFormatInfo*)outPropertyData;
-#if AUDIO_CODECS_PRIVATE
-				// Check for magic cookie. This will usually be embedded in QT atoms
-				if(formatInfo.mMagicCookie && formatInfo.mMagicCookieSize > 0)
-				{
-					// Save mInputFormat, since SetMagicCookie() will overwrite it
-					AudioStreamBasicDescription asbd = mInputFormat;
-					SetMagicCookie(formatInfo.mMagicCookie, formatInfo.mMagicCookieSize);
-					formatInfo.mASBD = mInputFormat;
-
-					// Restore mInputFormat
-					mInputFormat = asbd;
-				}
-				else
-				{
-					// We don't have a cookie, we have to check the ASBD 
-					// according to the input formats
-					UInt32 i;
-					for(i = 0; i < GetNumberSupportedInputFormats(); ++i)
-					{
-						if(mInputFormatList[i].IsEqual(formatInfo.mASBD))
-						{
-							// Fill out missing entries
-							CAStreamBasicDescription::FillOutFormat(formatInfo.mASBD, mInputFormatList[i]);
-							break;
-						}
-					}
-					if(i == GetNumberSupportedInputFormats())
-					{
-						// No suitable settings found
-						CODEC_THROW(kAudioCodecUnsupportedFormatError);
-					}
-				}
-#else
+                
 				// We don't have a cookie, we have to check the ASBD 
 				// according to the input formats
 				UInt32 i;
@@ -434,7 +350,6 @@ void	ACAppleIMA4Codec::GetProperty(AudioCodecPropertyID inPropertyID, UInt32& io
 					// No suitable settings found
 					CODEC_THROW(kAudioCodecUnsupportedFormatError);
 				}
-#endif
 			}
 			else
 			{
